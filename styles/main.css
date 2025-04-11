@@ -1,0 +1,14 @@
+@import url("./_normalize.css");
+@import url("./_globals.css");
+@import url("./_normalize.css");
+@import url("./blocks/desk.css");
+@import url("./blocks/cell.css");
+
+.root {
+  width: 100%;
+  height: 100%;
+  background-color: rgb(97, 97, 97);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
