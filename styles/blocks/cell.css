@@ -1,5 +1,28 @@
 .cell {
   height: 12.5%;
   aspect-ratio: 1/1;
-  background-color: aliceblue;
+
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+
+  &.white {
+    background-color: #ffffff;
+  }
+
+  &.black {
+    background-color: #000000;
+  }
+
+  &.cell__piece-black {
+    background-image: url(../../resources/images/black-piece.png);
+  }
+
+  &.cell__piece-white {
+    background-image: url(../../resources/images/white-piece.png);
+  }
+
+  &.cell-selected {
+    border: #57ff3a 3px solid;
+  }
 }
