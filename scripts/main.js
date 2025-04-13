@@ -14,6 +14,46 @@ let pieces = {
 };
 let isWhitePlayer = true;
 let lastSelected = null;
+let selectBlocked = false;
+
+const switchSelect = (cell) => {
+  if (selectBlocked) return;
+
+  if (lastSelected) {
+    lastSelected.isSelected = false;
+    lastSelected.node.classList.remove("cell-selected");
+
+    ghosts.forEach((ghost) => {
+      ghost[1].remove();
+    });
+  }
+
+  if (!cell.piece || cell.piece.isWhite !== isWhitePlayer) return;
+
+  lastSelected = cell;
+  lastSelected.isSelected = true;
+  lastSelected.node.classList.add("cell-selected");
+
+  moves(cell);
+};
+
+const createGhost = (cell) => {
+  const ghost = document.createElement("div");
+  ghost.classList = "piece ghost";
+  cell.node.append(ghost);
+
+  cell.canMove = true;
+  ghosts.push([cell, ghost]);
+};
+
+const getNearestCells = (cell) => {
+  return {
+    leftUp: isExists([cell.x - 1, cell.y - 1]),
+    rightUp: isExists([cell.x - 1, cell.y + 1]),
+    leftDown: isExists([cell.x + 1, cell.y - 1]),
+    rightDown: isExists([cell.x + 1, cell.y + 1]),
+  };
+};
 
 const isExists = (coords) => {
   if (cells[coords[0]] && cells[coords[0]][coords[1]]) {
@@ -23,8 +63,38 @@ const isExists = (coords) => {
   return false;
 };
 
-const isNotEmpty = (node) => {
-  return node.hasChildNodes();
+const isNotEmpty = (cell) => {
+  return cell.node.hasChildNodes();
+};
+
+const checkTakes = () => {
+  if (isWhitePlayer) {
+    pieces.whitePieces.forEach((piece) => {});
+  } else if (!isWhitePlayer) {
+    pieces.blackPieces.forEach((piece) => {
+      const nearCells = getNearestCells(piece.cell);
+
+      let currentCell = piece.cell;
+      let middle = nearCells.leftDown;
+      let target = getNearestCells(nearCells.leftDown).leftDown;
+
+      if (
+        middle &&
+        isNotEmpty(middle.node) &&
+        middle.piece.isWhite &&
+        target &&
+        !isNotEmpty(target.node)
+      ) {
+        createGhost(target);
+        lastSelected.isSelected = false;
+        lastSelected.node.classList.remove("cell-selected");
+
+        lastSelected = currentCell;
+        lastSelected.node.classList.add("cell-selected");
+        lastSelected.isSelected = true;
+      }
+    });
+  }
 };
 
 const move = (cell, target) => {
@@ -33,48 +103,41 @@ const move = (cell, target) => {
 
   cell.piece = null;
   isWhitePlayer = !isWhitePlayer;
-};
 
-const createGhost = (cell) => {
-  const ghost = document.createElement("div");
-  ghost.classList = "piece ghost";
-  cell.node.append(ghost);
-  cell.canMove = true;
-  ghosts.push(ghost);
+  ghosts.forEach((ghost) => {
+    ghost[1].remove();
+    ghost[0].canMove = false;
+  });
+
+  ghosts = [];
+  // checkTakes();
 };
 
 const moves = (cell) => {
-  const cellLeftUp = isExists([cell.x - 1, cell.y - 1]);
-  const cellRightUp = isExists([cell.x - 1, cell.y + 1]);
-  const cellLeftDown = isExists([cell.x + 1, cell.y - 1]);
-  const cellRightDown = isExists([cell.x + 1, cell.y + 1]);
-
-  ghosts.forEach((ghost) => {
-    ghost.remove();
-  });
+  const nearCells = getNearestCells(cell);
 
   if (cell.piece.isWhite) {
-    if (cellLeftUp) {
-      if (!isNotEmpty(cellLeftUp.node)) {
-        createGhost(cellLeftUp);
+    if (nearCells.leftUp) {
+      if (!isNotEmpty(nearCells.leftUp)) {
+        createGhost(nearCells.leftUp);
       }
     }
 
-    if (cellRightUp) {
-      if (!isNotEmpty(cellRightUp.node)) {
-        createGhost(cellRightUp);
+    if (nearCells.rightUp) {
+      if (!isNotEmpty(nearCells.rightUp)) {
+        createGhost(nearCells.rightUp);
       }
     }
   } else {
-    if (cellLeftDown) {
-      if (!isNotEmpty(cellLeftDown.node)) {
-        createGhost(cellLeftDown);
+    if (nearCells.leftDown) {
+      if (!isNotEmpty(nearCells.leftDown)) {
+        createGhost(nearCells.leftDown);
       }
     }
 
-    if (cellRightDown) {
-      if (!isNotEmpty(cellRightDown.node)) {
-        createGhost(cellRightDown);
+    if (nearCells.rightDown) {
+      if (!isNotEmpty(nearCells.rightDown)) {
+        createGhost(nearCells.rightDown);
       }
     }
   }
@@ -83,62 +146,49 @@ const moves = (cell) => {
 const cellClick = (event) => {
   const cell = event.currentTarget.cell;
 
-  if (
-    isNotEmpty(cell.node) &&
-    cell.node.firstChild.classList.contains("ghost")
-  ) {
+  switchSelect(cell);
+
+  if (cell.canMove) {
     move(lastSelected, cell);
   }
 
-  if (takes.length > 0) return;
-
-  if (lastSelected) {
-    lastSelected.isSelected = false;
-    lastSelected.node.classList.remove("cell-selected");
-  }
-
-  ghosts.forEach((ghost) => {
-    ghost.remove();
-  });
-
-  if (!isNotEmpty(cell.node)) return;
-
-  if (cell.piece.isWhite !== isWhitePlayer) return;
-
-  lastSelected = cell;
-  cell.isSelected = true;
-  cell.node.classList.add("cell-selected");
-  moves(cell);
-
-  console.log(cell);
+  // const cell = event.currentTarget.cell;
+  // if (
+  //   isNotEmpty(cell.node) &&
+  //   cell.node.firstChild.classList.contains("ghost")
+  // ) {
+  //   ghosts.forEach((ghost) => {
+  //     ghost.remove();
+  //   });
+  //   move(lastSelected, cell);
+  // }
+  // if (takes.length > 0) return;
+  // moves(cell);
 };
 
 const createPiece = (cell, isWhite) => {
-  const piece = document.createElement("div");
+  const pieceNode = document.createElement("div");
 
-  piece.classList.add("piece");
-  piece.classList.add(isWhite ? "white" : "black");
+  pieceNode.classList.add("piece");
+  pieceNode.classList.add(isWhite ? "white" : "black");
 
-  cell.append(piece);
+  cell.node.append(pieceNode);
+
+  const piece = {
+    node: pieceNode,
+    isQueen: false,
+    cell: cell,
+    isWhite: isWhite,
+  };
 
   if (isWhite) {
-    pieces.whitePieces.push({
-      node: piece,
-      isQueen: false,
-      cell: cell,
-      isWhite: isWhite,
-    });
+    pieces.whitePieces.push(piece);
 
-    return pieces.whitePieces[pieces.whitePieces.length - 1];
+    cell.piece = pieces.whitePieces[pieces.whitePieces.length - 1];
   } else {
-    pieces.blackPieces.push({
-      node: piece,
-      isQueen: false,
-      cell: cell,
-      isWhite: isWhite,
-    });
+    pieces.blackPieces.push(piece);
 
-    return pieces.blackPieces[pieces.blackPieces.length - 1];
+    cell.piece = pieces.blackPieces[pieces.blackPieces.length - 1];
   }
 };
 
@@ -148,22 +198,20 @@ const createCell = (isWhite, x, y) => {
   cell.classList.add(isWhite ? "white" : "black");
   cell.id = `${x}${y}`;
 
-  let piece = null;
-
-  if (x < 3 && !isWhite) {
-    piece = createPiece(cell, false);
-  } else if (x > 4 && !isWhite) {
-    piece = createPiece(cell, true);
-  }
-
   cells[x][y] = {
     node: cell,
     x: x,
     y: y,
-    piece: piece,
+    piece: null,
     isSelected: false,
     canMove: false,
   };
+
+  if (x < 3 && !isWhite) {
+    createPiece(cells[x][y], false);
+  } else if (x > 4 && !isWhite) {
+    createPiece(cells[x][y], true);
+  }
 
   cell.addEventListener("click", cellClick, false);
   cell.cell = cells[x][y];
