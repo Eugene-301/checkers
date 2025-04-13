@@ -3,6 +3,7 @@
 @import url("./_normalize.css");
 @import url("./blocks/desk.css");
 @import url("./blocks/cell.css");
+@import url("./blocks/piece.css");
 
 .root {
   width: 100%;

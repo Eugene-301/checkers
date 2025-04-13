@@ -1,0 +1,23 @@
+.piece {
+  width: 100%;
+  height: 100%;
+
+  background-position: center;
+  background-size: contain;
+  background-repeat: no-repeat;
+
+  transition: all 0.3s ease;
+
+  &.black {
+    background-image: url(../../resources/images/black-piece.png);
+  }
+
+  &.white {
+    background-image: url(../../resources/images/white-piece.png);
+  }
+
+  &.ghost {
+    opacity: 0.5;
+    background-image: url(../../resources/images/ghost-piece.png);
+  }
+}
