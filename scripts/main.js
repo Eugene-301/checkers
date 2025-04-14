@@ -16,25 +16,24 @@ let isWhitePlayer = true;
 let lastSelected = null;
 let selectBlocked = false;
 
-const switchSelect = (cell) => {
-  if (selectBlocked) return;
-
-  if (lastSelected) {
-    lastSelected.isSelected = false;
-    lastSelected.node.classList.remove("cell-selected");
-
-    ghosts.forEach((ghost) => {
-      ghost[1].remove();
-    });
-  }
-
-  if (!cell.piece || cell.piece.isWhite !== isWhitePlayer) return;
-
+const select = (cell) => {
   lastSelected = cell;
   lastSelected.isSelected = true;
   lastSelected.node.classList.add("cell-selected");
+};
 
-  moves(cell);
+const unSelect = () => {
+  if (!lastSelected) return;
+  lastSelected.isSelected = false;
+  lastSelected.node.classList.remove("cell-selected");
+  lastSelected = null;
+};
+
+const clearGhosts = () => {
+  ghosts.forEach((ghost) => {
+    ghost[1].remove();
+    ghost[0].canMove = false;
+  });
 };
 
 const createGhost = (cell) => {
@@ -67,53 +66,145 @@ const isNotEmpty = (cell) => {
   return cell.node.hasChildNodes();
 };
 
+const checkTake = (cell) => {
+  const nearCells = getNearestCells(cell);
+
+  console.log("take checked");
+
+  Object.keys(nearCells).forEach((cell) => {
+    let middle = nearCells[cell];
+    let target = getNearestCells(middle)[cell];
+
+    if (
+      middle &&
+      middle.piece &&
+      (isWhitePlayer ? !middle.piece.isWhite : middle.piece.isWhite) &&
+      target &&
+      !isNotEmpty(target)
+    ) {
+      unSelect();
+      clearGhosts();
+
+      select(cell);
+      createGhost(target);
+      const take = {
+        cell: cell,
+        defeatCell: middle,
+        endPoint: target,
+      };
+
+      takes.push(take);
+    }
+  });
+};
+
 const checkTakes = () => {
   if (isWhitePlayer) {
-    pieces.whitePieces.forEach((piece) => {});
-  } else if (!isWhitePlayer) {
+    pieces.whitePieces.forEach((piece) => {
+      const nearCells = getNearestCells(piece.cell);
+
+      let currentCell = piece.cell;
+
+      Object.keys(nearCells).forEach((cell) => {
+        let middle = nearCells[cell];
+        let target = getNearestCells(middle)[cell];
+
+        if (
+          middle &&
+          middle.piece &&
+          !middle.piece.isWhite &&
+          target &&
+          !isNotEmpty(target)
+        ) {
+          unSelect();
+          clearGhosts();
+
+          select(currentCell);
+          createGhost(target);
+          const take = {
+            cell: currentCell,
+            defeatCell: middle,
+            endPoint: target,
+          };
+
+          takes.push(take);
+        }
+      });
+    });
+  } else {
     pieces.blackPieces.forEach((piece) => {
       const nearCells = getNearestCells(piece.cell);
 
       let currentCell = piece.cell;
-      let middle = nearCells.leftDown;
-      let target = getNearestCells(nearCells.leftDown).leftDown;
 
-      if (
-        middle &&
-        isNotEmpty(middle.node) &&
-        middle.piece.isWhite &&
-        target &&
-        !isNotEmpty(target.node)
-      ) {
-        createGhost(target);
-        lastSelected.isSelected = false;
-        lastSelected.node.classList.remove("cell-selected");
+      Object.keys(nearCells).forEach((cell) => {
+        let middle = nearCells[cell];
+        let target = getNearestCells(middle)[cell];
 
-        lastSelected = currentCell;
-        lastSelected.node.classList.add("cell-selected");
-        lastSelected.isSelected = true;
-      }
+        if (
+          middle &&
+          middle.piece &&
+          middle.piece.isWhite &&
+          target &&
+          !isNotEmpty(target)
+        ) {
+          unSelect();
+          clearGhosts();
+
+          select(currentCell);
+          createGhost(target);
+          const take = {
+            cell: currentCell,
+            defeatCell: middle,
+            endPoint: target,
+          };
+
+          takes.push(take);
+          console.log("left kill");
+        }
+      });
     });
   }
 };
 
 const move = (cell, target) => {
-  target.node.append(cell.piece.node);
-  target.piece = cell.piece;
+  if (takes.length > 0) {
+    takes.forEach((elem) => {
+      if (elem.cell === cell) {
+        elem.defeatCell.piece.node.remove();
 
-  cell.piece = null;
-  isWhitePlayer = !isWhitePlayer;
+        let piecesColor =
+          pieces[!isWhitePlayer ? "whitePieces" : "blackPieces"];
+        let pieceIndex = piecesColor.indexOf(elem.defeatCell.piece);
 
-  ghosts.forEach((ghost) => {
-    ghost[1].remove();
-    ghost[0].canMove = false;
-  });
+        piecesColor.splice(pieceIndex, 1);
 
-  ghosts = [];
+        elem.defeatCell.piece = null;
+
+        takes = [];
+        checkTake(elem.cell);
+        if (takes.length === 0) isWhitePlayer = !isWhitePlayer;
+      }
+    });
+    target.node.append(cell.piece.node);
+    target.piece = cell.piece;
+    cell.piece.cell = target;
+
+    cell.piece = null;
+  } else {
+    target.node.append(cell.piece.node);
+    target.piece = cell.piece;
+    cell.piece.cell = target;
+
+    cell.piece = null;
+
+    isWhitePlayer = !isWhitePlayer;
+  }
+
   // checkTakes();
 };
 
-const moves = (cell) => {
+const calcMoves = (cell) => {
   const nearCells = getNearestCells(cell);
 
   if (cell.piece.isWhite) {
@@ -146,24 +237,46 @@ const moves = (cell) => {
 const cellClick = (event) => {
   const cell = event.currentTarget.cell;
 
-  switchSelect(cell);
+  if (cell.isSelected) return;
 
   if (cell.canMove) {
     move(lastSelected, cell);
+    console.log("сделан ход");
+
+    unSelect();
+    clearGhosts();
+    takes = [];
+    checkTakes();
+
+    return;
+  }
+  if ((!isNotEmpty(cell) && !cell.canMove) || lastSelected) {
+    unSelect();
+    clearGhosts();
   }
 
-  // const cell = event.currentTarget.cell;
-  // if (
-  //   isNotEmpty(cell.node) &&
-  //   cell.node.firstChild.classList.contains("ghost")
-  // ) {
-  //   ghosts.forEach((ghost) => {
-  //     ghost.remove();
-  //   });
-  //   move(lastSelected, cell);
-  // }
-  // if (takes.length > 0) return;
-  // moves(cell);
+  if (isNotEmpty(cell) && cell.piece.isWhite === isWhitePlayer) {
+    if (takes.length > 0) {
+      takes.forEach((elem) => {
+        console.log("aaa");
+
+        if (cell === elem.cell) {
+          select(cell);
+          createGhost(elem.endPoint);
+          console.log("ghost created");
+        }
+      });
+    } else {
+      if (ghosts.length > 0) {
+        select(cell);
+        clearGhosts();
+        calcMoves(cell);
+      }
+
+      select(cell);
+      calcMoves(cell);
+    }
+  }
 };
 
 const createPiece = (cell, isWhite) => {
@@ -184,11 +297,11 @@ const createPiece = (cell, isWhite) => {
   if (isWhite) {
     pieces.whitePieces.push(piece);
 
-    cell.piece = pieces.whitePieces[pieces.whitePieces.length - 1];
+    cell.piece = piece;
   } else {
     pieces.blackPieces.push(piece);
 
-    cell.piece = pieces.blackPieces[pieces.blackPieces.length - 1];
+    cell.piece = piece;
   }
 };
 
