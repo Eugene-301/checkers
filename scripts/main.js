@@ -69,8 +69,6 @@ const isNotEmpty = (cell) => {
 const checkTake = (cell) => {
   const nearCells = getNearestCells(cell);
 
-  console.log("take checked");
-
   Object.keys(nearCells).forEach((cell) => {
     let middle = nearCells[cell];
     let target = getNearestCells(middle)[cell];
@@ -200,8 +198,6 @@ const move = (cell, target) => {
 
     isWhitePlayer = !isWhitePlayer;
   }
-
-  // checkTakes();
 };
 
 const calcMoves = (cell) => {
@@ -241,7 +237,6 @@ const cellClick = (event) => {
 
   if (cell.canMove) {
     move(lastSelected, cell);
-    console.log("сделан ход");
 
     unSelect();
     clearGhosts();
@@ -258,12 +253,9 @@ const cellClick = (event) => {
   if (isNotEmpty(cell) && cell.piece.isWhite === isWhitePlayer) {
     if (takes.length > 0) {
       takes.forEach((elem) => {
-        console.log("aaa");
-
         if (cell === elem.cell) {
           select(cell);
           createGhost(elem.endPoint);
-          console.log("ghost created");
         }
       });
     } else {
@@ -350,5 +342,3 @@ const createField = () => {
 };
 
 createField();
-
-console.log(cells);
