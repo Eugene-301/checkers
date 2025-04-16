@@ -130,45 +130,6 @@ const checkTakes = () => {
       }
     });
   });
-
-  // if (isWhitePlayer) {
-  //   pieces.whitePieces.forEach((piece) => {
-
-  //   });
-  // } else {
-  //   pieces.blackPieces.forEach((piece) => {
-  //     const nearCells = getNearestCells(piece.cell);
-
-  //     let currentCell = piece.cell;
-
-  //     Object.keys(nearCells).forEach((cell) => {
-  //       let middle = nearCells[cell];
-  //       let target = getNearestCells(middle)[cell];
-
-  //       if (
-  //         middle &&
-  //         middle.piece &&
-  //         middle.piece.isWhite &&
-  //         target &&
-  //         !isNotEmpty(target)
-  //       ) {
-  //         unSelect();
-  //         clearGhosts();
-
-  //         select(currentCell);
-  //         createGhost(target);
-  //         const take = {
-  //           cell: currentCell,
-  //           defeatCell: middle,
-  //           endPoint: target,
-  //         };
-
-  //         takes.push(take);
-  //         console.log("left kill");
-  //       }
-  //     });
-  //   });
-  // }
 };
 
 const move = (cell, target) => {

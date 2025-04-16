@@ -10,10 +10,18 @@
 
   &.black {
     background-image: url(../../resources/images/black-piece.png);
+
+    &.queen {
+      background-image: url(../../resources/images/black-piece-queen.png);
+    }
   }
 
   &.white {
     background-image: url(../../resources/images/white-piece.png);
+
+    &.queen {
+      background-image: url(../../resources/images/white-piece-queen.png);
+    }
   }
 
   &.ghost {
