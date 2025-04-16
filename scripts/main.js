@@ -69,9 +69,15 @@ const isNotEmpty = (cell) => {
 const checkTake = (cell) => {
   const nearCells = getNearestCells(cell);
 
+  console.log("Приходят:");
+
+  console.log(takes);
+
   Object.keys(nearCells).forEach((cell) => {
     let middle = nearCells[cell];
     let target = getNearestCells(middle)[cell];
+
+    console.log(middle);
 
     if (
       middle &&
@@ -83,7 +89,7 @@ const checkTake = (cell) => {
       unSelect();
       clearGhosts();
 
-      select(cell);
+      select(nearCells[cell]);
       createGhost(target);
       const take = {
         cell: cell,
@@ -94,6 +100,9 @@ const checkTake = (cell) => {
       takes.push(take);
     }
   });
+
+  console.log("Уходят:");
+  console.log(takes);
 };
 
 const checkTakes = () => {
@@ -167,6 +176,12 @@ const checkTakes = () => {
 
 const move = (cell, target) => {
   if (takes.length > 0) {
+    target.node.append(cell.piece.node);
+    target.piece = cell.piece;
+    cell.piece.cell = target;
+
+    cell.piece = null;
+
     takes.forEach((elem) => {
       if (elem.cell === cell) {
         elem.defeatCell.piece.node.remove();
@@ -180,15 +195,10 @@ const move = (cell, target) => {
         elem.defeatCell.piece = null;
 
         takes = [];
-        checkTake(elem.cell);
+        checkTake(elem.endPoint);
         if (takes.length === 0) isWhitePlayer = !isWhitePlayer;
       }
     });
-    target.node.append(cell.piece.node);
-    target.piece = cell.piece;
-    cell.piece.cell = target;
-
-    cell.piece = null;
   } else {
     target.node.append(cell.piece.node);
     target.piece = cell.piece;
