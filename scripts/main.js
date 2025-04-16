@@ -19,6 +19,7 @@ let lastSelected = null;
 let selectBlocked = false;
 
 const select = (cell) => {
+  if (cell.isSelected) return;
   lastSelected = cell;
   lastSelected.isSelected = true;
   lastSelected.node.classList.add("cell-selected");
@@ -36,14 +37,20 @@ const clearGhosts = () => {
     ghost[1].remove();
     ghost[0].canMove = false;
   });
+
+  ghosts = [];
 };
 
-const createGhost = (cell) => {
+const createGhost = (cell, isLocal = false) => {
   const ghost = document.createElement("div");
   ghost.classList = "piece ghost";
   cell.node.append(ghost);
 
   cell.canMove = true;
+
+  if (isLocal) {
+    return [cell, ghost];
+  }
   ghosts.push([cell, ghost]);
 };
 
@@ -69,7 +76,7 @@ const isNotEmpty = (cell) => {
 };
 
 const checkQueens = () => {
-  for (let i = 0; i < cells.length; i++) {
+  for (let i = 0; i < fieldSize.x; i++) {
     let borderPiece = cells[isWhitePlayer ? 0 : 7][i].piece;
 
     if (
@@ -119,6 +126,32 @@ const checkTakes = () => {
 
     let currentCell = piece.cell;
 
+    // for (let i = 0; i < fieldSize.x; i++) {
+    //   currentCell = nearCells.leftUp;
+    //   let localGhosts = [];
+
+    //   if (!currentCell) {
+    //     ghosts.push(...localGhosts);
+    //     break;
+    //   }
+
+    //   if (!isNotEmpty(currentCell)) {
+    //     localGhosts.append(createGhost(currentCell));
+    //   } else if (currentCell.piece.isWhite === piece.isWhite) {
+    //     break;
+    //   } else if (currentCell.piece.isWhite !== piece.isWhite) {
+    //     const leftUpCell = getNearestCells(currentCell).leftUp;
+    //     if (leftUpCell && !isNotEmpty(leftUpCell)) {
+    //       takes.push({
+    //         cell: piece.cell,
+    //         defeatCell: currentCell,
+    //         endPoint: leftUpCell,
+    //       });
+    //       break;
+    //     }
+    //   }
+    // }
+
     Object.keys(nearCells).forEach((cell) => {
       let middle = nearCells[cell];
       let target = getNearestCells(middle)[cell];
@@ -135,6 +168,7 @@ const checkTakes = () => {
 
         select(currentCell);
         createGhost(target);
+
         const take = {
           cell: currentCell,
           defeatCell: middle,
@@ -156,7 +190,7 @@ const move = (cell, target) => {
     cell.piece = null;
 
     takes.forEach((elem) => {
-      if (elem.cell === cell) {
+      if (elem.cell === cell && elem.endPoint === target) {
         elem.defeatCell.piece.node.remove();
 
         let piecesColor =
