@@ -69,10 +69,6 @@ const isNotEmpty = (cell) => {
 const checkTake = (cell) => {
   const nearCells = getNearestCells(cell);
 
-  console.log("Приходят:");
-
-  console.log(takes);
-
   Object.keys(nearCells).forEach((cell) => {
     let middle = nearCells[cell];
     let target = getNearestCells(middle)[cell];
@@ -100,78 +96,79 @@ const checkTake = (cell) => {
       takes.push(take);
     }
   });
-
-  console.log("Уходят:");
-  console.log(takes);
 };
 
 const checkTakes = () => {
-  if (isWhitePlayer) {
-    pieces.whitePieces.forEach((piece) => {
-      const nearCells = getNearestCells(piece.cell);
+  pieces[isWhitePlayer ? "whitePieces" : "blackPieces"].forEach((piece) => {
+    const nearCells = getNearestCells(piece.cell);
 
-      let currentCell = piece.cell;
+    let currentCell = piece.cell;
 
-      Object.keys(nearCells).forEach((cell) => {
-        let middle = nearCells[cell];
-        let target = getNearestCells(middle)[cell];
+    Object.keys(nearCells).forEach((cell) => {
+      let middle = nearCells[cell];
+      let target = getNearestCells(middle)[cell];
 
-        if (
-          middle &&
-          middle.piece &&
-          !middle.piece.isWhite &&
-          target &&
-          !isNotEmpty(target)
-        ) {
-          unSelect();
-          clearGhosts();
+      if (
+        middle &&
+        middle.piece &&
+        (isWhitePlayer ? !middle.piece.isWhite : middle.piece.isWhite) &&
+        target &&
+        !isNotEmpty(target)
+      ) {
+        unSelect();
+        clearGhosts();
 
-          select(currentCell);
-          createGhost(target);
-          const take = {
-            cell: currentCell,
-            defeatCell: middle,
-            endPoint: target,
-          };
+        select(currentCell);
+        createGhost(target);
+        const take = {
+          cell: currentCell,
+          defeatCell: middle,
+          endPoint: target,
+        };
 
-          takes.push(take);
-        }
-      });
+        takes.push(take);
+      }
     });
-  } else {
-    pieces.blackPieces.forEach((piece) => {
-      const nearCells = getNearestCells(piece.cell);
+  });
 
-      let currentCell = piece.cell;
+  // if (isWhitePlayer) {
+  //   pieces.whitePieces.forEach((piece) => {
 
-      Object.keys(nearCells).forEach((cell) => {
-        let middle = nearCells[cell];
-        let target = getNearestCells(middle)[cell];
+  //   });
+  // } else {
+  //   pieces.blackPieces.forEach((piece) => {
+  //     const nearCells = getNearestCells(piece.cell);
 
-        if (
-          middle &&
-          middle.piece &&
-          middle.piece.isWhite &&
-          target &&
-          !isNotEmpty(target)
-        ) {
-          unSelect();
-          clearGhosts();
+  //     let currentCell = piece.cell;
 
-          select(currentCell);
-          createGhost(target);
-          const take = {
-            cell: currentCell,
-            defeatCell: middle,
-            endPoint: target,
-          };
+  //     Object.keys(nearCells).forEach((cell) => {
+  //       let middle = nearCells[cell];
+  //       let target = getNearestCells(middle)[cell];
 
-          takes.push(take);
-          console.log("left kill");
-        }
-      });
-    });
-  }
+  //       if (
+  //         middle &&
+  //         middle.piece &&
+  //         middle.piece.isWhite &&
+  //         target &&
+  //         !isNotEmpty(target)
+  //       ) {
+  //         unSelect();
+  //         clearGhosts();
+
+  //         select(currentCell);
+  //         createGhost(target);
+  //         const take = {
+  //           cell: currentCell,
+  //           defeatCell: middle,
+  //           endPoint: target,
+  //         };
+
+  //         takes.push(take);
+  //         console.log("left kill");
+  //       }
+  //     });
+  //   });
+  // }
 };
 
 const move = (cell, target) => {
