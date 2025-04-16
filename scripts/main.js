@@ -11,6 +11,8 @@ let cells = [];
 let pieces = {
   blackPieces: [],
   whitePieces: [],
+  whiteQueens: [],
+  blackQueens: [],
 };
 let isWhitePlayer = true;
 let lastSelected = null;
@@ -66,14 +68,27 @@ const isNotEmpty = (cell) => {
   return cell.node.hasChildNodes();
 };
 
+const checkQueens = () => {
+  for (let i = 0; i < cells.length; i++) {
+    let borderPiece = cells[isWhitePlayer ? 0 : 7][i].piece;
+
+    if (
+      borderPiece &&
+      (isWhitePlayer ? borderPiece.isWhite : !borderPiece.isWhite) &&
+      !borderPiece.isQueen
+    ) {
+      borderPiece.isQueen = true;
+      borderPiece.node.classList.add("queen");
+    }
+  }
+};
+
 const checkTake = (cell) => {
   const nearCells = getNearestCells(cell);
 
   Object.keys(nearCells).forEach((cell) => {
     let middle = nearCells[cell];
     let target = getNearestCells(middle)[cell];
-
-    console.log(middle);
 
     if (
       middle &&
@@ -151,6 +166,7 @@ const move = (cell, target) => {
         piecesColor.splice(pieceIndex, 1);
 
         elem.defeatCell.piece = null;
+        checkQueens();
 
         takes = [];
         checkTake(elem.endPoint);
@@ -164,6 +180,7 @@ const move = (cell, target) => {
 
     cell.piece = null;
 
+    checkQueens();
     isWhitePlayer = !isWhitePlayer;
   }
 };
